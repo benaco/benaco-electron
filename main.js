@@ -5,20 +5,67 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
+const fs = require('fs')
 const url = require('url')
+
+const { URL } = require('url')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
+// For the case of a deployed bindist
+// (if the electron binary is in this dir)
+if (fs.existsSync("electron") || fs.existsSync("electron.exe")) {
+  process.chdir('resources/app');
+}
+
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600})
+  mainWindow.setMenu(null)
+
+  const PROTOCOL = 'https'
+  const SCAN_DIR = "scan"
+
+  let domains = fs.readdirSync(SCAN_DIR)
+
+  electron.protocol.interceptFileProtocol(PROTOCOL, (request, callback) => {
+
+    console.log('\x1b[36m%s\x1b[0m', request.url)
+
+    let parsedUrl = new URL(request.url)
+
+    // Look up the file in any of the domains of the scan bundle.
+    var loadPath = request.url
+    domains.some((domain) => {
+      let checkPath = path.normalize(path.join(__dirname, SCAN_DIR, domain, parsedUrl.pathname))
+      if (fs.existsSync(checkPath)) {
+        loadPath = checkPath
+        return true
+      }
+    })
+
+    if (fs.existsSync(loadPath)) {
+      console.log('\x1b[32m  found: %s\x1b[0m', loadPath)
+    } else {
+      console.log('\x1b[31m  not found %s\x1b[0m', loadPath)
+    }
+
+    callback({path: loadPath})
+  })
+
+  // TODO Show nice error when scans dir doesn't exist or no
+  //      scan UUID can be found, or multiple can be found.
+  let viewDir = path.join(SCAN_DIR, domains[0], 'view')
+  let uuids = fs.readdirSync(viewDir)
+  console.log("Found scans: " + uuids)
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
+    host: 'beta.benaco.com', // will be routed to file by `interceptFileProtocol`
+    pathname: path.join('view/' + uuids[0]),
+    protocol: 'https:',
     slashes: true
   }))
 
