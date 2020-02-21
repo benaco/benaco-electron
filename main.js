@@ -18,9 +18,7 @@ let mainWindow;
 
 // For the case of a deployed bindist
 // (if the electron binary is in this dir)
-if (fs.existsSync('electron') || fs.existsSync('electron.exe')) {
-  process.chdir('resources/app');
-}
+process.chdir(app.getAppPath());
 
 function createWindow () {
   // Create the browser window.
