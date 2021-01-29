@@ -18,7 +18,9 @@ let mainWindow;
 
 // For the case of a deployed bindist
 // (if the electron binary is in this dir)
-process.chdir(app.getAppPath());
+// if (fs.existsSync('electron') || fs.existsSync('electron.exe')) {
+  process.chdir(app.getAppPath());
+//}
 
 function createWindow () {
   // Create the browser window.
@@ -43,12 +45,13 @@ function createWindow () {
     callback({path: loadPath});
   })
 
+  // cBUNDLE_DIR = process.cwd();
   let scans = fs.readdirSync(BUNDLE_DIR);
   // we're only interested in directories -- this is convenient because it makes the app
   // not fail if we leave the .zip file there after unzipping
   scans = scans.filter(path => {
     return fs.lstatSync(`${BUNDLE_DIR}/${path}`).isDirectory();
-  });
+    });
 
   if (scans.length == 0) {
     throw 'Could not find any scans in `bundle` directory! Have you unpacked the offline bundle?';
@@ -65,8 +68,20 @@ function createWindow () {
     slashes: true
   }));
 
+  const webContents = mainWindow.webContents
+
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  // webContents.openDevTools();
+
+  // Open external links in external browser.
+  var handleRedirect = (e, url) => {
+    if(url != webContents.getURL()) {
+      e.preventDefault()
+      require('electron').shell.openExternal(url)
+    }
+  }
+  webContents.on('will-navigate', handleRedirect)
+  webContents.on('new-window', handleRedirect)
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
