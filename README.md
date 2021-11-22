@@ -21,11 +21,12 @@ We give detail instructions here:
 2. Unpack the downloaded `.zip` into a directory called `BenacoOfflineViewer`.
    You can delete the downloaded `.zip` after unpacking.
 3. Create the directory `BenacoOfflineViewer/resources/app`.
-4. Copy the following files from this repository ([direct download link](https://github.com/benaco/benaco-electron/archive/refs/heads/master.zip)) into that directory:
+4. Copy the following files and directories from this repository ([direct download link](https://github.com/benaco/benaco-electron/archive/refs/heads/master.zip)) into that directory:
 
     ```
     package.json
     main.js
+    self-signed-tls/
     ```
 5. Create the empty directory `BenacoOfflineViewer/resources/app/bundle/`.
 6. Download the [benaco.com](https://benaco.com) offline bundle from your Benaco Tour Edit page as a `.zip` file.
