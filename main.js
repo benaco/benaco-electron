@@ -9,6 +9,8 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const http = require('http')
+const https = require('https');
 
 const { URL } = require('url');
 
@@ -90,6 +92,56 @@ function createWindow () {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  // Start local web server, so that users can also open the same
+  // tour with other local browsers, e.g. to enable VR support.
+  // VR support requires a secure context, so we start both a plain
+  // HTTP server, and an HTTPS server, on separate ports.
+  const httpPort = 8000;
+  const httpsPort = 8001; // self-signed certificate below, will show a security warning in the browser
+
+  // Change this to 0.0.0.0 to make the tour available in your network,
+  // e.g. to open the tour on a phone over Wifi to use it for VR.
+  const listenHost = '127.0.0.1';
+  // const listenHost = '0.0.0.0';
+
+  const baseDirectory = scan;
+
+  const httpsServerOptions = {
+    key: fs.readFileSync(path.join(__dirname, 'self-signed-tls', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'self-signed-tls', 'cert.pem'))
+  };
+
+  const requestHandler = function (request, response) {
+    try {
+      const requestUrl = url.parse(request.url);
+
+      const fsPath = path.normalize(path.join(__dirname, BUNDLE_DIR, scan, path.normalize(requestUrl.pathname)));
+
+      console.log(`web-server: ${fsPath}`);
+
+      const fileStream = fs.createReadStream(fsPath);
+      fileStream.pipe(response);
+      fileStream.on('open', function() {
+        response.writeHead(200);
+      })
+      fileStream.on('error', function(e) {
+        response.writeHead(404); // assume the file doesn't exist
+        response.end();
+      })
+    } catch(e) {
+      response.writeHead(500);
+      response.end(); // end the response so browsers don't hang
+      console.log(e.stack);
+    }
+  };
+
+  http.createServer(requestHandler).listen(httpPort, listenHost);
+  console.log("HTTP: listening on port " + httpPort);
+
+  https.createServer(httpsServerOptions, requestHandler).listen(httpsPort, listenHost);
+  console.log("HTTPS: listening on port " + httpsPort);
+
 }
 
 // This method will be called when Electron has finished

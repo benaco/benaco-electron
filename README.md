@@ -35,7 +35,7 @@ We give detail instructions here:
     ```
     bundle
     └── eb80aa80-dafd-45b3-bf1c-a1316445049f
-        ├── index.html
+        ├── index.html
         ⋮
     ```
 9. Test the package by running the `electron` or `electron.exe` file.
@@ -53,6 +53,31 @@ If you want to make multiple executable bundles with different tours, you do not
 Simply make a copy of your existing `BenacoOfflineViewer` directory, delete the existing tour from its `BenacoOfflineViewer/resources/app/bundle/` directory, and place your new downloaded tour in there.
 
 
+## VR support
+
+If you want to show a tour in VR, you often have to show it in a different browser (e.g. the HTC Vive VR goggles work well with Steam and Firefox).
+Similarly, benaco-electron currently does not run on phones, where you may want to run VR.
+
+For this reason, the benaco-electron app also starts a local webserver, to which you can connect via other local browsers, or from other devices in your network (such as a phone).
+
+When the benaco-electron window is open, you can access your tour via:
+
+* http://127.0.0.1:8000/index.html (port 8000)
+* https://127.0.0.1:8001/index.html (port 8001)
+  * This is an encrypted connection with a self-signed certificate. You will have to accept the security warning (which is OK because the software is only designed to run in the local network).
+    It is required because browsers like Chrome only provide VR in a "secure contect", that is, e.g. over HTTPS.
+
+By default the benaco-electron local webserver only accepts connections from the same computer.
+
+If you want to access the tour from one or multiple phones for the purpose of VR:
+
+1. Edit the file `main.js` in a text editor (like Windows Notepad), search for `listenHost = '127.0.0.1'` and replace the `127.0.0.1` by `0.0.0.0`.
+2. Find your computer's local IP address, e.g. the IP address of your WiFi network over which your phone can access your computer.
+3. On your phone, open a browser (e.g. Chrome on Android), and navigate to `https://INSERT_YOUR_IP_HERE:8001/index.html`.
+  * Accept the security warning (see above).
+4. You should now be able to press the Benaco VR button.
+
+
 ## Instructions for developers (working on `benaco-electron`)
 
 ### Prequisites
@@ -63,7 +88,7 @@ you've done so the bundle directory should look something like this:
 ```
 bundle
 └── eb80aa80-dafd-45b3-bf1c-a1316445049f
-    ├── index.html
+    ├── index.html
     ⋮
 ```
 
