@@ -9,6 +9,7 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const http = require('http')
 
 const { URL } = require('url');
 
@@ -18,7 +19,9 @@ let mainWindow;
 
 // For the case of a deployed bindist
 // (if the electron binary is in this dir)
-process.chdir(app.getAppPath());
+// if (fs.existsSync('electron') || fs.existsSync('electron.exe')) {
+  process.chdir(app.getAppPath());
+//}
 
 function createWindow () {
   // Create the browser window.
@@ -65,8 +68,20 @@ function createWindow () {
     slashes: true
   }));
 
+  const webContents = mainWindow.webContents
+
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  // webContents.openDevTools();
+
+  // Open external links in external browser.
+  var handleRedirect = (e, url) => {
+    if(url != webContents.getURL()) {
+      e.preventDefault()
+      require('electron').shell.openExternal(url)
+    }
+  }
+  webContents.on('will-navigate', handleRedirect)
+  webContents.on('new-window', handleRedirect)
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -75,6 +90,38 @@ function createWindow () {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  // Start local web server, so that users can also open the same
+  // tour with other local browsers, e.g. to enable VR support.
+  const baseDirectory = scan;
+
+  const port = 1234;
+
+  http.createServer(function (request, response) {
+    try {
+      const requestUrl = url.parse(request.url);
+
+      const fsPath = path.normalize(path.join(__dirname, BUNDLE_DIR, scan, path.normalize(requestUrl.pathname)));
+
+      console.log(`web-server: ${fsPath}`);
+
+      const fileStream = fs.createReadStream(fsPath);
+      fileStream.pipe(response);
+      fileStream.on('open', function() {
+        response.writeHead(200);
+      })
+      fileStream.on('error', function(e) {
+        response.writeHead(404); // assume the file doesn't exist
+        response.end();
+      })
+    } catch(e) {
+      response.writeHead(500);
+      response.end(); // end the response so browsers don't hang
+      console.log(e.stack);
+    }
+  }).listen(port, "127.0.0.1");
+
+  console.log("listening on port " + port);
 }
 
 // This method will be called when Electron has finished
