@@ -3,6 +3,10 @@
 Simple electron app that allows you to distribute a single Benaco
 virtual tour as a standalone, offline executable.
 
+### Video tutorial
+
+https://github.com/benaco/benaco-electron/assets/399535/b36869f3-5351-47a2-b69a-ecc024fc607d
+
 ## Instructions for users (simply packaging a Benaco tour)
 
 These steps are simple and should only take a few minutes (download some files and drag them into the correct directory structure).
