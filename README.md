@@ -58,6 +58,21 @@ If you want to make multiple executable bundles with different tours, you do not
 Simply make a copy of your existing `BenacoOfflineViewer` directory, delete the existing tour from its `BenacoOfflineViewer/resources/app/bundle/` directory, and place your new downloaded tour in there.
 
 
+## Starting from network drives
+
+If you store `electron.exe` on a On Windows network drive, it will fail to show a window when started.
+
+This is due to [this issue](https://github.com/electron/electron/issues/36698), where Electron's own sandbox forbids itself to use the GPU when started from network drives.
+
+You can work around this issue by creating a file `start.bat` next to the `electron.exe` file, with the contents:
+
+```bat
+start electron.exe --no-sandbox
+```
+
+Then run `start.bat` instead of `electron.exe`.
+
+
 ## VR support
 
 If you want to show a tour in VR, you often have to show it in a different browser (e.g. the HTC Vive VR goggles work well with Steam and Firefox).
@@ -70,7 +85,7 @@ When the benaco-electron window is open, you can access your tour via:
 * http://127.0.0.1:8000/index.html (port 8000)
 * https://127.0.0.1:8001/index.html (port 8001)
   * This is an encrypted connection with a self-signed certificate. You will have to accept the security warning (which is OK because the software is only designed to run in the local network).
-    It is required because browsers like Chrome only provide VR in a "secure contect", that is, e.g. over HTTPS.
+    It is required because browsers like Chrome only provide VR in a "secure context", that is, e.g. over HTTPS.
 
 By default the benaco-electron local webserver only accepts connections from the same computer.
 
@@ -83,9 +98,22 @@ If you want to access the tour from one or multiple phones for the purpose of VR
 4. You should now be able to press the Benaco VR button.
 
 
+## Starting multiple instances
+
+Currently you can start only one `electron.exe` at a time.
+
+This is because the VR support mentioned above requires starting a local web server on port 8000, and only 1 running program can use this port at any given time.
+
+If you try to start 2 instances, you will get an error message mentioning `Error: listen EADDRINUSE: address already in use 127.0.0.1:8000`.
+
+Simply close all other existing benaco-electron windows, and try again.
+
+If you do not need VR support, you can remove this restriction by disabling the local web server: In `main.js`, remove (or comment out by prepending `//`) the lines that contain the function `createServer`. Also remove / comment out the `console.log` lines below them.
+
+
 ## Instructions for developers (working on `benaco-electron`)
 
-### Prequisites
+### Prerequisites
 
 Unpack the bundle you want to show into a directory named `bundle`. After
 you've done so the bundle directory should look something like this:
