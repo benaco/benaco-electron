@@ -24,6 +24,12 @@ let mainWindow;
   process.chdir(app.getAppPath());
 //}
 
+function die(message) {
+  console.error(message);
+  electron.dialog.showMessageBoxSync({ type: "error", message: message });
+  electron.app.exit(1);
+}
+
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600});
@@ -53,12 +59,12 @@ function createWindow () {
   // not fail if we leave the .zip file there after unzipping
   scans = scans.filter(path => {
     return fs.lstatSync(`${BUNDLE_DIR}/${path}`).isDirectory();
-    });
+  });
 
   if (scans.length == 0) {
-    throw 'Could not find any scans in `bundle` directory! Have you unpacked the offline bundle?';
+    die('Could not find any scans in `bundle` directory! Have you unpacked the offline bundle?');
   } else if (scans.length > 1) {
-    throw `Found multiple scans: ${scans}. Please pick one.`;
+    die(`Found multiple scans: ${scans}. Please pick one.`);
   }
   const scan = scans[0];
 
